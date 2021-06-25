@@ -9,4 +9,12 @@
  *      Vec2 usa la punta del Vec1 como base y llega al 10,10,0.
  *      Vec3 gira entre el 20,10,0 y el 10,20,0. Usa como eje 45° de rotacion del eje Z.
  *      Vec4 usa la punta del Vec1 como base y llega al 20,20,0.
+ *      
+ *      
+ *      Anotaciones: Si en vez de tomarlo como vectores, lo tomo puntos, hay 3 puntos que no se mueven
+ *      0,0,0 - 10,10,0 - 20,20,0 no se mueven del lugar
+ *      Por otra parte, el 2do punto, empezando de abajo, mirando en el mismo sentido que el eje X, gira en sentido antihorario
+ *      Mientras que el 4to, gira en sentido horario.
+ *      
+ *      
 */
