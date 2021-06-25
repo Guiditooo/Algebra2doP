@@ -8,59 +8,31 @@ namespace EjerciciosAlgebra
     public class Ejercicio1 : MonoBehaviour
     {
 
-        public int presettedLenght = 0;
-        public float presettedAngle = 0;
+        public const int Lenght = 10;
+        public float angle = 0;
 
-        VectorArrow arrow;
+        Vector3 vec;
 
         private void Start()
         {
-            VectorDebugger.AddVector(Vector3.zero, Color.red, "0");
-            VectorDebugger.AddVector(new Vector3(presettedLenght, 0, 0), Color.red, "1");
 
-            arrow = new VectorArrow(1, 0.5f, 2);
+            vec = new Vector3(Mathf.Cos(Mathf.Deg2Rad * angle), Mathf.Sin(Mathf.Deg2Rad * angle));
+
+            VectorDebugger.AddVector(Vector3.zero, Color.red, "0");
+            VectorDebugger.AddVector(new Vector3(Lenght, 0, 0), Color.red, "1");
 
             VectorDebugger.EnableCoordinates();
             VectorDebugger.EnableEditorView();
-            VectorDebugger.SetVectorArrow(arrow);
-
-            //target = new GameObject();
-            //target.transform.position = new Vector3(presettedLenght, 0, 0);
 
         }
-        float a = 0;
         private void Update()
         {
 
-                
+            Vector3 act = transform.position;
 
-            float x = (presettedLenght * Mathf.Tan(a) * Mathf.Sqrt(1 + Mathf.Pow(Mathf.Tan(a), 2))) / (1 + Mathf.Pow(Mathf.Tan(a), 2));
-            float z;
+            VectorDebugger.UpdatePosition("1", new Vector3(act.x * vec.x - act.y * vec.y, act.y * vec.x - act.x * vec.y, 0));
 
-            if (a <= 180)
-            {
-
-                z = Mathf.Sqrt(Mathf.Pow(presettedLenght, 2) - Mathf.Pow(x, 2));
-
-            }
-            else
-            {
-
-                z = -Mathf.Sqrt(Mathf.Pow(presettedLenght, 2) - Mathf.Pow(x, 2));
-
-                if (a == 360)
-                {
-                    a = 0;
-                }
-
-            }
-            
-
-            a += presettedAngle;
-
-            
-
-            VectorDebugger.UpdatePosition("1",new Vector3(x,0,z));
+            //transform.position = new Vector3(act.x * vec.x - act.y * vec.y, act.x * vec.y - act.y * vec.x, 0);
 
         }
 
