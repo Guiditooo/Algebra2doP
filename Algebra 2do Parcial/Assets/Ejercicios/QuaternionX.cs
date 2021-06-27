@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Algebra
 {
-    public struct QuaternionX : IEquatable<QuaternionX>, IFormattable
+    public struct QuaternionX : IEquatable<object>, IFormattable
     {
 
         #region Variables
@@ -90,12 +90,26 @@ namespace Algebra
 
             return ret;
         }
-
         public static QuaternionX EulerAngles(Vector3 angle)
         {
             return Euler(angle.x, angle.y, angle.z);
         }
-
+        public static QuaternionX Normalize(QuaternionX q)
+        { 
+            float aux = Mathf.Sqrt(Mathf.Pow(q._x, 2) + Mathf.Pow(q._y, 2) + Mathf.Pow(q._z, 2) + Mathf.Pow(q._w, 2));
+            return new QuaternionX(q._x / aux, q._y / aux, q._z / aux, q._w / aux);
+        }
+        public QuaternionX Normalize()
+        {
+            float aux = Mathf.Sqrt(Mathf.Pow(_x, 2) + Mathf.Pow(_y, 2) + Mathf.Pow(_z, 2) + Mathf.Pow(_w, 2));
+            return new QuaternionX(_x / aux, _y / aux,_z / aux, _w / aux);
+        }
+        public QuaternionX normalized {
+            get
+            {
+                return Normalize(this);
+            }
+        }
         #endregion
 
         #region Operators
@@ -124,6 +138,9 @@ namespace Algebra
         {
             return (v1._x != v2._x || v1._y != v2._y || v1._z != v2._z || v1._w != v2._w);
         }
+        public override int GetHashCode() => _x.GetHashCode() ^ _y.GetHashCode() << 2 ^ _z.GetHashCode() >> 2 ^ _w.GetHashCode() >> 1;
+
+        public override bool Equals(object other) => other is QuaternionX other1 && Equals(other1);
 
         public static QuaternionX operator *(QuaternionX a, QuaternionX b) //Quaternion - Quaternion
         {
@@ -163,19 +180,15 @@ namespace Algebra
 
         private void Start()
         {
-            Quaternion qa = new Quaternion();
-
+            QuaternionX qa = new QuaternionX(1, 2, 3, 1); 
             qa.Normalize();
-        }
 
-        public bool Equals(QuaternionX other)
-        {
-            throw new NotImplementedException();
         }
-
         string IFormattable.ToString(string format, IFormatProvider formatProvider)
         {
             throw new NotImplementedException();
         }
+
+       
     }
 }
