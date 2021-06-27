@@ -90,14 +90,22 @@ namespace Algebra
 
             return ret;
         }
+        public static QuaternionX Euler(Vector3 angle)
+        {
+            return Euler(angle.x, angle.y, angle.z);
+        }
+        public static QuaternionX EulerAngles(float x, float y, float z)
+        {
+            return Euler(x, y, z);
+        }
         public static QuaternionX EulerAngles(Vector3 angle)
         {
             return Euler(angle.x, angle.y, angle.z);
         }
-        public static QuaternionX Normalize(QuaternionX q)
+        public static QuaternionX Normalize(QuaternionX a)
         { 
-            float aux = Mathf.Sqrt(Mathf.Pow(q._x, 2) + Mathf.Pow(q._y, 2) + Mathf.Pow(q._z, 2) + Mathf.Pow(q._w, 2));
-            return new QuaternionX(q._x / aux, q._y / aux, q._z / aux, q._w / aux);
+            float aux = Mathf.Sqrt(Mathf.Pow(a._x, 2) + Mathf.Pow(a._y, 2) + Mathf.Pow(a._z, 2) + Mathf.Pow(a._w, 2));
+            return new QuaternionX(a._x / aux, a._y / aux, a._z / aux, a._w / aux);
         }
         public QuaternionX Normalize()
         {
@@ -109,6 +117,14 @@ namespace Algebra
             {
                 return Normalize(this);
             }
+        }
+        public static float Dot(QuaternionX a, QuaternionX b) //Término a término. Double son par hacerlo más exacto.
+        {
+            return (float)((double)a.x * (double)b.x + (double)a.y * (double)b.y + (double)a.z * (double)b.z + (double)a.w * (double)b.w);
+        }
+        public static float Angle(QuaternionX a, QuaternionX b) //Investigar
+        {
+            return (float)((double)Mathf.Acos(Mathf.Min(Mathf.Abs(Quaternion.Dot(a, b)), 1f)) * 2.0f * Mathf.Rad2Deg);
         }
         #endregion
 
