@@ -66,6 +66,35 @@ namespace Algebra
                         throw new IndexOutOfRangeException("Index out of Range!");                }
             }
         }
+        public static QuaternionX identity { get; } = new QuaternionX(0, 0, 0, 1); //Devuelve la identidad del quaternion (0,0,0,1).
+        public static QuaternionX Euler(float x, float y, float z)
+        {
+
+            float sin;
+            float cos;
+            QuaternionX qX, qY, qZ, ret = identity;
+
+            sin = Mathf.Sin(Mathf.Deg2Rad * x * 0.5f);
+            cos = Mathf.Cos(Mathf.Deg2Rad * x * 0.5f);
+            qX = new QuaternionX(sin, 0, 0, cos);
+            
+            sin = Mathf.Sin(Mathf.Deg2Rad * y * 0.5f);
+            cos = Mathf.Cos(Mathf.Deg2Rad * y * 0.5f);
+            qY = new QuaternionX(0, sin, 0, cos);
+            
+            sin = Mathf.Sin(Mathf.Deg2Rad * z * 0.5f);
+            cos = Mathf.Cos(Mathf.Deg2Rad * z * 0.5f);
+            qZ = new QuaternionX(0, 0, sin, cos);
+
+            ret = qY * qX * qZ;
+
+            return ret;
+        }
+
+        public static QuaternionX EulerAngles(Vector3 angle)
+        {
+            return Euler(angle.x, angle.y, angle.z);
+        }
 
         #endregion
 

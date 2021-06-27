@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Algebra;
 
 namespace EjerciciosAlgebra
 {
+
 
     public class Ejercicio1 : MonoBehaviour
     {
@@ -29,7 +31,7 @@ namespace EjerciciosAlgebra
                                                                         //elegida, en este caso es 1, porque el 0 está reservado
                                                                         //al (0,0,0).
 
-            Vector3 niu = Quaternion.Euler(aux)*act;    //Un quaternion multiplicado con un vector, devuelve un vector.
+            Vector3 niu = QuaternionX.EulerAngles(aux)*act;    //Un quaternion multiplicado con un vector, devuelve un vector.
                                                         //Quaternion.euler genera una rotación sobre los ejes distintos en donde
                                                         //su componente es distinta de 0. Se lo multiplica por la posición actual
                                                         //del vector seleccionado arriba y con eso se genera la rotación.
