@@ -120,12 +120,35 @@ namespace Algebra
         }
         public static float Dot(QuaternionX a, QuaternionX b) //Término a término. Double son par hacerlo más exacto.
         {
-            return (float)((double)a.x * (double)b.x + (double)a.y * (double)b.y + (double)a.z * (double)b.z + (double)a.w * (double)b.w);
+            return (float)((double)a._x * (double)b._x + (double)a._y * (double)b._y + (double)a._z * (double)b._z + (double)a._w * (double)b._w);
         }
         public static float Angle(QuaternionX a, QuaternionX b) //Investigar
         {
-            return (float)((double)Mathf.Acos(Mathf.Min(Mathf.Abs(Quaternion.Dot(a, b)), 1f)) * 2.0f * Mathf.Rad2Deg);
+            return (float)((double)Mathf.Acos(Mathf.Min(Mathf.Abs(Dot(a, b)), 1f)) * 2.0f * Mathf.Rad2Deg);
         }
+        public static QuaternionX AngleAxis(float angle, Vector3 axis) //Genera una rotacion en dicho vector usa radianes
+        {
+            QuaternionX ret = identity; 
+            axis.Normalize();
+            axis *= (float)System.Math.Sin((angle / 2) * Mathf.Deg2Rad);
+            ret._x = axis.x;
+            ret._y = axis.y;
+            ret._z = axis.z;
+            ret._w = (float)System.Math.Cos((angle / 2) * Mathf.Deg2Rad);
+            return Normalize(ret);
+        }
+        public static QuaternionX AxisAngle(Vector3 axis, float angle) //Genera una rotacion en dicho vector usa grados
+        {
+            QuaternionX ret = identity;
+            axis.Normalize();
+            axis *= (float)System.Math.Sin((angle / 2));
+            ret._x = axis.x;
+            ret._y = axis.y;
+            ret._z = axis.z;
+            ret._w = (float)System.Math.Cos((angle / 2));
+            return Normalize(ret);
+        }
+
         #endregion
 
         #region Operators
