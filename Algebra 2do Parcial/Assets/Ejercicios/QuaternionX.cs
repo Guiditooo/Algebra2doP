@@ -27,7 +27,6 @@ namespace Algebra
         #endregion
 
         #region Methods
-
         public float this[int index] //Entre 0 y 3. 
         {
             get //Devuelve esa componente.
@@ -148,7 +147,212 @@ namespace Algebra
             ret._w = (float)System.Math.Cos((angle / 2));
             return Normalize(ret);
         }
+        public static QuaternionX FromToRotation(Vector3 from, Vector3 to)
+        {
 
+            Vector3.Normalize(to);
+            Vector3.Normalize(from);
+
+            QuaternionX ret;
+
+            float dot = Vector3.Dot(from, to);
+
+            if (dot > -1 + kEpsilon) // < - 0,99999
+            {
+                float s = Mathf.Sqrt((1 + dot) * 2);
+                float inverse = 1 / s;
+                Vector3 c = Vector3.Cross(from, to) * inverse;
+                ret = new QuaternionX(c.x, c.y, c.z, s * 0.5f);
+            }
+            else if (dot > 1 - kEpsilon) // > 0,99999
+            {
+                ret = new QuaternionX(0, 0, 0, 1);
+            }
+            else // - 0,99999 < dot < 0,99999
+            {
+                Vector3 axis = Vector3.Cross(Vector3.right, from);
+                if (Vector3.SqrMagnitude(axis) < kEpsilon)
+                {
+                    axis = Vector3.Cross(Vector3.forward, from);
+                }
+                ret = new QuaternionX(axis.x, axis.y, axis.z, 0);
+            }
+
+            return ret;
+
+        }
+        public static QuaternionX Inverse(QuaternionX q) => -q;
+        public static QuaternionX Lerp(QuaternionX a, QuaternionX b, float time)
+        {
+            time = Mathf.Clamp(time, 0, 1);
+            QuaternionX ret = LerpUnclamped(a, b, time);
+            Normalize(ret);
+            return ret;
+        }
+        public static QuaternionX LerpUnclamped(QuaternionX a, QuaternionX b, float time)
+        {
+            QuaternionX ret = identity;
+            if (Dot(a, b) < 0)
+            {
+                ret._x = a._x + time * (-b._x - a._x);
+                ret._y = a._y + time * (-b._y - a._y);
+                ret._z = a._z + time * (-b._z - a._z);
+                ret._w = a._w + time * (-b._w - b._w);
+            }
+            else
+            {
+                ret._x = a._x + time * (b._x - a._x);
+                ret._y = a._y + time * (b._y - a._y);
+                ret._z = a._z + time * (b._z - a._z);
+                ret._w = a._w + time * (b._w - b._w);
+            }
+            Normalize(ret);
+            return ret;
+        }
+        public static QuaternionX Slerp(QuaternionX a, QuaternionX b, float time)
+        {
+            time = Mathf.Clamp(time, 0, 1);
+            return SlerpUnclamped(a, b, time);
+        }
+        public static QuaternionX SlerpUnclamped(QuaternionX a, QuaternionX b, float time)
+        {
+            QuaternionX ret = identity;
+            float dot = Dot(a, b);
+
+            if (dot < 0)
+            {
+                dot = -dot;
+                b = -b;
+                b._w = -b._w;
+            }
+            float t1, t2;
+            if (dot < 0.95)
+            {
+                float angle = Mathf.Acos(dot);
+                float sinAgle = Mathf.Sin(angle);
+                float inverse = 1 / sinAgle;
+                t1 = Mathf.Sin((1 - time) * angle) * inverse;
+                t2 = Mathf.Sin(time * angle) * inverse;
+                ret = new QuaternionX(a._x * t1 + b._x * t2, a._y * t1 + b._y * t2, a._z * t1 + a._z * t2, a._w * t1 + b._w * t2);
+            }
+            else
+            {
+                ret = Lerp(a, b, time);
+            }
+            return ret;
+        }
+        public void Set(float new_x, float new_y, float new_z, float new_w)
+        {
+            _x = new_x;
+            _y = new_y;
+            _z = new_z;
+            _w = new_w;
+        }
+        public static QuaternionX LookRotation(Vector3 forward, Vector3 upwards)
+        {
+
+            QuaternionX ret = identity;
+            int[] _next = { 1, 2, 0 };
+
+            if (forward.magnitude < kEpsilon) //Si la magnitud es muy chica o es 0
+            {
+                return ret;
+            }
+
+            forward.Normalize();
+
+            upwards = upwards != null ? upwards : Vector3.up;
+            Vector3 right = Vector3.Cross(upwards, forward);
+            Vector3.Normalize(right);
+            upwards = Vector3.Cross(forward, right);
+            right = Vector3.Cross(upwards, forward);
+
+            float t = right.x + upwards.y + forward.z;
+            if (t > 0)
+            {
+                float x, y, z, w;
+
+                t++;
+
+                float s = 0.5f / Mathf.Sqrt(t);
+
+                w = s * t;
+                x = (upwards.z - forward.y) * s;
+                y = (forward.x - right.z) * s;
+                z = (right.y - upwards.x) * s;
+                ret = new QuaternionX(x, y, z, w);
+            }
+            else
+            {
+                float[,] rot =
+                {
+                    {right.x, upwards.x, forward.x},
+                    {right.y, upwards.y, forward.y},
+                    {right.z, upwards.z, forward.z}
+                };
+                float[] q = { 0, 0, 0 };
+                int i = 0;
+                if (upwards.y > right.x)
+                {
+                    i = 1;
+                }
+                if (forward.z > rot[i, i])
+                {
+                    i = 2;
+                }
+                int j = _next[i];
+                int k = _next[j];
+                t = rot[i, i] - rot[j, j] - rot[k, k] + 1;
+                float s = 0.5f / Mathf.Sqrt(t);
+                q[i] = s * t;
+                float w = (rot[k, j] - rot[j, k]) * s;
+                q[j] = (rot[j, i] + rot[i, j]) * s;
+                q[k] = (rot[k, i] + rot[i, k]) * s;
+                ret = new QuaternionX(q[0], q[1], q[2], w);
+            }
+            Normalize(ret);
+            return ret;
+        }
+        public static QuaternionX LookRotation(Vector3 forward) => LookRotation(forward, Vector3.up);
+        public void SetLookRotation(Vector3 view)
+        {
+            Vector3 up = Vector3.up;
+            this.SetLookRotation(view, up);
+        }
+        public void SetLookRotation(Vector3 view, Vector3 up)
+        {
+            this = LookRotation(view, up);
+        }
+        public static QuaternionX RotateTowards(QuaternionX from, QuaternionX to, float angle)
+        {
+            float num = Angle(from, to); //Es mover del uno al otro, la cantidad de grados especificada.
+            if (num == 0)
+            {
+                return to;
+            }
+            float t = Mathf.Min(1f, angle / num); //Single es una estructura para mucha precision de datos 32 digitos.
+            return SlerpUnclamped(from, to, t);
+        }
+        public void SetFromToRotation(Vector3 from, Vector3 to)
+        {
+            this = FromToRotation(from, to);
+        }
+        public void ToAngleAxis(out float angle, out Vector3 axis)
+        {
+            angle = 2 * Mathf.Acos(_w);
+            if (Mathf.Abs(angle - 0) < kEpsilon)
+            {
+                angle *= Mathf.Deg2Rad;
+                axis = new Vector3(1, 0, 0);
+            }
+            float div = 1 / Mathf.Sqrt(1 - Mathf.Sqrt(_w));
+            angle *= Mathf.Deg2Rad;
+            axis = new Vector3(_x * div, _y * div, _z * div);
+        }
+        string IFormattable.ToString(string format, IFormatProvider formatProvider)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
 
         #region Operators
@@ -163,7 +367,7 @@ namespace Algebra
         }
         public static QuaternionX operator -(QuaternionX v1)//Value1
         {
-            return new QuaternionX(-v1._x, -v1._y, -v1._z, -v1._w);
+            return new QuaternionX(-v1._x, -v1._y, -v1._z, v1._w);
         }
         public static QuaternionX operator *(QuaternionX v1, float v2)//Value1, Value2
         {
@@ -215,19 +419,6 @@ namespace Algebra
         }
 
         #endregion
-
-
-        private void Start()
-        {
-            QuaternionX qa = new QuaternionX(1, 2, 3, 1); 
-            qa.Normalize();
-
-        }
-        string IFormattable.ToString(string format, IFormatProvider formatProvider)
-        {
-            throw new NotImplementedException();
-        }
-
        
     }
 }
