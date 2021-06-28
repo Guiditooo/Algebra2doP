@@ -157,7 +157,7 @@ namespace Algebra
         public Vector3 lossyScale{
             get
             {
-                return new Vector3(m00,m11,m22);
+                return new Vector3(GetColumn(0).magnitude, GetColumn(1).magnitude, GetColumn(2).magnitude);
             }
         }
         public static Matrix4x4X zero
