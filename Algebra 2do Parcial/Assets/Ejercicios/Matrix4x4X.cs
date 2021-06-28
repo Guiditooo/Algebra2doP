@@ -135,24 +135,30 @@ namespace Algebra
                 }
             }
         }
-        public Matrix4x4X(Vector4 column0, Vector4 column1, Vector4 column2, Vector4 column3)
+        public Matrix4x4X(Vector4 col0, Vector4 col1, Vector4 col2, Vector4 col3)
         {
-            m00 = column0.x;
-            m01 = column1.x;
-            m02 = column2.x;
-            m03 = column3.x;
-            m10 = column0.y;
-            m11 = column1.y;
-            m12 = column2.y;
-            m13 = column3.y;
-            m20 = column0.z;
-            m21 = column1.z;
-            m22 = column2.z;
-            m23 = column3.z;
-            m30 = column0.w;
-            m31 = column1.w;
-            m32 = column2.w;
-            m33 = column3.w;
+            m00 = col0.x;
+            m01 = col1.x;
+            m02 = col2.x;
+            m03 = col3.x;
+            m10 = col0.y;
+            m11 = col1.y;
+            m12 = col2.y;
+            m13 = col3.y;
+            m20 = col0.z;
+            m21 = col1.z;
+            m22 = col2.z;
+            m23 = col3.z;
+            m30 = col0.w;
+            m31 = col1.w;
+            m32 = col2.w;
+            m33 = col3.w;
+        }
+        public Vector3 lossyScale{
+            get
+            {
+                return new Vector3(m00,m11,m22);
+            }
         }
         public static Matrix4x4X zero
         {
@@ -191,10 +197,312 @@ namespace Algebra
                 return m;
             }
         }
+        public static Matrix4x4X Inverse(Matrix4x4X m)
+        {
+            float detA = Determinant(m);
+            if (detA == 0)
+                return zero;
 
+            Matrix4x4X aux = new Matrix4x4X()
+            {
+                
+                //------0---------
+                m00 = m.m11 * m.m22 * m.m33 + m.m12 * m.m23 * m.m31 + m.m13 * m.m21 * m.m32 - m.m11 * m.m23 * m.m32 - m.m12 * m.m21 * m.m33 - m.m13 * m.m22 * m.m31,
+                m01 = m.m01 * m.m23 * m.m32 + m.m02 * m.m21 * m.m33 + m.m03 * m.m22 * m.m31 - m.m01 * m.m22 * m.m33 - m.m02 * m.m23 * m.m31 - m.m03 * m.m21 * m.m32,
+                m02 = m.m01 * m.m12 * m.m33 + m.m02 * m.m13 * m.m32 + m.m03 * m.m11 * m.m32 - m.m01 * m.m13 * m.m32 - m.m02 * m.m11 * m.m33 - m.m03 * m.m12 * m.m31,
+                m03 = m.m01 * m.m13 * m.m22 + m.m02 * m.m11 * m.m23 + m.m03 * m.m12 * m.m21 - m.m01 * m.m12 * m.m23 - m.m02 * m.m13 * m.m21 - m.m03 * m.m11 * m.m22,
+                //-------1--------					     								    
+                m10 = m.m10 * m.m23 * m.m32 + m.m12 * m.m20 * m.m33 + m.m13 * m.m22 * m.m30 - m.m10 * m.m22 * m.m33 - m.m12 * m.m23 * m.m30 - m.m13 * m.m20 * m.m32,
+                m11 = m.m00 * m.m22 * m.m33 + m.m02 * m.m23 * m.m30 + m.m03 * m.m20 * m.m32 - m.m00 * m.m23 * m.m32 - m.m02 * m.m20 * m.m33 - m.m03 * m.m22 * m.m30,
+                m12 = m.m00 * m.m13 * m.m32 + m.m02 * m.m10 * m.m33 + m.m03 * m.m12 * m.m30 - m.m00 * m.m12 * m.m33 - m.m02 * m.m13 * m.m30 - m.m03 * m.m10 * m.m32,
+                m13 = m.m00 * m.m12 * m.m23 + m.m02 * m.m13 * m.m20 + m.m03 * m.m10 * m.m22 - m.m00 * m.m13 * m.m22 - m.m02 * m.m10 * m.m23 - m.m03 * m.m12 * m.m20,
+                //-------2--------					     								    
+                m20 = m.m10 * m.m21 * m.m33 + m.m11 * m.m23 * m.m30 + m.m13 * m.m20 * m.m31 - m.m10 * m.m23 * m.m31 - m.m11 * m.m20 * m.m33 - m.m13 * m.m31 * m.m30,
+                m21 = m.m00 * m.m23 * m.m31 + m.m01 * m.m20 * m.m33 + m.m03 * m.m21 * m.m30 - m.m00 * m.m21 * m.m33 - m.m01 * m.m23 * m.m30 - m.m03 * m.m20 * m.m31,
+                m22 = m.m00 * m.m11 * m.m33 + m.m01 * m.m13 * m.m31 + m.m03 * m.m10 * m.m31 - m.m00 * m.m13 * m.m31 - m.m01 * m.m10 * m.m33 - m.m03 * m.m11 * m.m30,
+                m23 = m.m00 * m.m13 * m.m21 + m.m01 * m.m10 * m.m23 + m.m03 * m.m11 * m.m31 - m.m00 * m.m11 * m.m23 - m.m01 * m.m13 * m.m20 - m.m03 * m.m10 * m.m21,
+                //------3---------					     								    
+                m30 = m.m10 * m.m22 * m.m31 + m.m11 * m.m20 * m.m32 + m.m12 * m.m21 * m.m30 - m.m00 * m.m21 * m.m32 - m.m11 * m.m22 * m.m30 - m.m12 * m.m20 * m.m31,
+                m31 = m.m00 * m.m21 * m.m32 + m.m01 * m.m22 * m.m30 + m.m02 * m.m20 * m.m31 - m.m00 * m.m22 * m.m31 - m.m01 * m.m20 * m.m32 - m.m02 * m.m21 * m.m30,
+                m32 = m.m00 * m.m12 * m.m31 + m.m01 * m.m10 * m.m32 + m.m02 * m.m11 * m.m30 - m.m00 * m.m11 * m.m32 - m.m01 * m.m12 * m.m30 - m.m02 * m.m10 * m.m31,
+                m33 = m.m00 * m.m11 * m.m22 + m.m01 * m.m12 * m.m20 + m.m02 * m.m10 * m.m21 - m.m00 * m.m12 * m.m21 - m.m01 * m.m10 * m.m22 - m.m02 * m.m11 * m.m20
+            };
+
+            Matrix4x4X ret = new Matrix4x4X()
+            {
+                m00 = aux.m00 / detA,
+                m01 = aux.m01 / detA,
+                m02 = aux.m02 / detA,
+                m03 = aux.m03 / detA,
+                m10 = aux.m10 / detA,
+                m11 = aux.m11 / detA,
+                m12 = aux.m12 / detA,
+                m13 = aux.m13 / detA,
+                m20 = aux.m20 / detA,
+                m21 = aux.m21 / detA,
+                m22 = aux.m22 / detA,
+                m23 = aux.m23 / detA,
+                m30 = aux.m30 / detA,
+                m31 = aux.m31 / detA,
+                m32 = aux.m32 / detA,
+                m33 = aux.m33 / detA
+
+            };
+            return ret;
+        }
+        public static Matrix4x4X Transpose(Matrix4x4X m)
+        {
+            return new Matrix4x4X()
+            {
+                m01 = m.m10,
+                m02 = m.m20,
+                m03 = m.m30,
+                m10 = m.m01,
+                m12 = m.m21,
+                m13 = m.m31,
+                m20 = m.m02,
+                m21 = m.m12,
+                m23 = m.m32,
+                m30 = m.m03,
+                m31 = m.m13,
+                m32 = m.m23,
+            };
+        }
+        public void SetTRS(Vector3 pos, Quaternion q, Vector3 s)
+        {
+            this = TRS(pos, q, s);
+        }
+        public static Matrix4x4X Translate(Vector3 v)
+        {
+            Matrix4x4X m;
+            m.m00 = 1f;
+            m.m01 = 0.0f;
+            m.m02 = 0.0f;
+            m.m03 = v.x;
+            m.m10 = 0.0f;
+            m.m11 = 1f;
+            m.m12 = 0.0f;
+            m.m13 = v.y;
+            m.m20 = 0.0f;
+            m.m21 = 0.0f;
+            m.m22 = 1f;
+            m.m23 = v.z;
+            m.m30 = 0.0f;
+            m.m31 = 0.0f;
+            m.m32 = 0.0f;
+            m.m33 = 1f;
+            return m;
+        }
+        public static Matrix4x4X Rotate(Quaternion q)
+        {
+            double num1 = q.x * 2f;
+            double num2 = q.y * 2f;
+            double num3 = q.z * 2f;
+            double num4 = q.x * num1;
+            double num5 = q.y * num2;
+            double num6 = q.z * num3;
+            double num7 = q.x * num2;
+            double num8 = q.x * num3;
+            double num9 = q.y * num3;
+            double num10 = q.w * num1;
+            double num11 = q.w * num2;
+            double num12 = q.w * num3;
+            Matrix4x4X m;
+            m.m00 = (float)(1.0 - num5 + num6);
+            m.m10 = (float)(num7 + num12);
+            m.m20 = (float)(num8 - num11);
+            m.m30 = 0.0f;
+            m.m01 = (float)(num7 - num12);
+            m.m11 = (float)(1.0 - num4 + num6);
+            m.m21 = (float)(num9 + num10);
+            m.m31 = 0.0f;
+            m.m02 = (float)(num8 + num11);
+            m.m12 = (float)(num9 - num10);
+            m.m22 = (float)(1.0 - num4 + num5);
+            m.m32 = 0.0f;
+            m.m03 = 0.0f;
+            m.m13 = 0.0f;
+            m.m23 = 0.0f;
+            m.m33 = 1f;
+            return m;
+        }
+        public static Matrix4x4X Scale(Vector3 v)
+        {
+            Matrix4x4X m;
+            m.m00 = v.x;
+            m.m01 = 0.0f;
+            m.m02 = 0.0f;
+            m.m03 = 0.0f;
+            m.m10 = 0.0f;
+            m.m11 = v.y;
+            m.m12 = 0.0f;
+            m.m13 = 0.0f;
+            m.m20 = 0.0f;
+            m.m21 = 0.0f;
+            m.m22 = v.z;
+            m.m23 = 0.0f;
+            m.m30 = 0.0f;
+            m.m31 = 0.0f;
+            m.m32 = 0.0f;
+            m.m33 = 1f;
+            return m;
+        }
+        public static Matrix4x4X TRS(Vector3 pos, Quaternion q, Vector3 s)
+        {
+            return (Translate(pos) * Rotate(q) * Scale(s));
+        }
+        public Vector3 MultiplyVector(Vector3 v)
+        {
+            Vector3 v3;
+            v3.x = (float)((double)m00 * (double)v.x + (double)m01 * (double)v.y + (double)m02 * (double)v.z);
+            v3.y = (float)((double)m10 * (double)v.x + (double)m11 * (double)v.y + (double)m12 * (double)v.z);
+            v3.z = (float)((double)m20 * (double)v.x + (double)m21 * (double)v.y + (double)m22 * (double)v.z);
+            return v3;
+        }
+        public Vector3 MultiplyPoint3x4(Vector3 p)
+        {
+            Vector3 v3;
+            v3.x = (float)((double)m00 * (double)p.x + (double)m01 * (double)p.y + (double)m02 * (double)p.z) + m03;
+            v3.y = (float)((double)m10 * (double)p.x + (double)m11 * (double)p.y + (double)m12 * (double)p.z) + m13;
+            v3.z = (float)((double)m20 * (double)p.x + (double)m21 * (double)p.y + (double)m22 * (double)p.z) + m23;
+            return v3;
+        }
+        public Vector3 MultiplyPoint(Vector3 p)
+        {
+            Vector3 v3;
+
+            v3.x = (float)((double)m00 * (double)p.x + (double)m01 * (double)p.y + (double)m02 * (double)p.z) + m03;
+            v3.y = (float)((double)m10 * (double)p.x + (double)m11 * (double)p.y + (double)m12 * (double)p.z) + m13;
+            v3.z = (float)((double)m20 * (double)p.x + (double)m21 * (double)p.y + (double)m22 * (double)p.z) + m23;
+            float num = 1f / ((float)((double)m30 * (double)p.x + (double)m31 * (double)p.y + (double)m32 * (double)p.z) + m33);
+            v3.x *= num;
+            v3.y *= num;
+            v3.z *= num;
+            return v3;
+        }
+        public void SetRow(int index, Vector4 row)
+        {
+            this[index, 0] = row.x;
+            this[index, 1] = row.y;
+            this[index, 2] = row.z;
+            this[index, 3] = row.w;
+        }
+        public void SetColumn(int index, Vector4 col)
+        {
+            this[0, index] = col.x;
+            this[1, index] = col.y;
+            this[2, index] = col.z;
+            this[3, index] = col.w;
+        }
+        public Vector4 GetRow(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    return new Vector4(m00, m01, m02, m03);
+                case 1:
+                    return new Vector4(m10, m11, m12, m13);
+                case 2:
+                    return new Vector4(m20, m21, m22, m23);
+                case 3:
+                    return new Vector4(m30, m31, m32, m33);
+                default:
+                    throw new IndexOutOfRangeException("Index out of Range!");
+            }
+        }
+        public override bool Equals(object other) => other is Matrix4x4X other1 && this.Equals(other1);
         public bool Equals(Matrix4x4X other)
         {
-            throw new NotImplementedException();
+            int num;
+            if ( GetColumn(0).Equals(other.GetColumn(0)))
+            {
+                Vector4 col =  GetColumn(1);
+                if (col.Equals(other.GetColumn(1)))
+                {
+                    col =  GetColumn(2);
+                    if (col.Equals(other.GetColumn(2)))
+                    {
+                        col =  GetColumn(3);
+                        num = col.Equals(other.GetColumn(3)) ? 1 : 0;
+                        return num != 0;
+                    }
+                }
+            }
+            num = 0;
+            return num != 0;
         }
+        public override int GetHashCode()
+        {
+            Vector4 col = GetColumn(0);
+            int hashCode = col.GetHashCode();
+            col =  GetColumn(1);
+            int num1 = col.GetHashCode() << 2;
+            int num2 = hashCode ^ num1;
+            col =  GetColumn(2);
+            int num3 = col.GetHashCode() >> 2;
+            int num4 = num2 ^ num3;
+            col =  GetColumn(3);
+            int num5 = col.GetHashCode() >> 1;
+            return num4 ^ num5;
+        }
+        public float determinant => Determinant(this);
+        public static float Determinant(Matrix4x4X m)
+        {
+            return
+                m[0, 3] * m[1, 2] * m[2, 1] * m[3, 0] - m[0, 2] * m[1, 3] * m[2, 1] * m[3, 0] -
+                m[0, 3] * m[1, 1] * m[2, 2] * m[3, 0] + m[0, 1] * m[1, 3] * m[2, 2] * m[3, 0] +
+                m[0, 2] * m[1, 1] * m[2, 3] * m[3, 0] - m[0, 1] * m[1, 2] * m[2, 3] * m[3, 0] -
+                m[0, 3] * m[1, 2] * m[2, 0] * m[3, 1] + m[0, 2] * m[1, 3] * m[2, 0] * m[3, 1] +
+                m[0, 3] * m[1, 0] * m[2, 2] * m[3, 1] - m[0, 0] * m[1, 3] * m[2, 2] * m[3, 1] -
+                m[0, 2] * m[1, 0] * m[2, 3] * m[3, 1] + m[0, 0] * m[1, 2] * m[2, 3] * m[3, 1] +
+                m[0, 3] * m[1, 1] * m[2, 0] * m[3, 2] - m[0, 1] * m[1, 3] * m[2, 0] * m[3, 2] -
+                m[0, 3] * m[1, 0] * m[2, 1] * m[3, 2] + m[0, 0] * m[1, 3] * m[2, 1] * m[3, 2] +
+                m[0, 1] * m[1, 0] * m[2, 3] * m[3, 2] - m[0, 0] * m[1, 1] * m[2, 3] * m[3, 2] -
+                m[0, 2] * m[1, 1] * m[2, 0] * m[3, 3] + m[0, 1] * m[1, 2] * m[2, 0] * m[3, 3] +
+                m[0, 2] * m[1, 0] * m[2, 1] * m[3, 3] - m[0, 0] * m[1, 2] * m[2, 1] * m[3, 3] -
+                m[0, 1] * m[1, 0] * m[2, 2] * m[3, 3] + m[0, 0] * m[1, 1] * m[2, 2] * m[3, 3];
+        }
+        public Vector4 GetColumn(int i)
+        {
+            return new Vector4(this[0, i], this[1, i], this[2, i], this[3, i]);
+        }
+        #region Operator
+        public static Matrix4x4X operator *(Matrix4x4X a, Matrix4x4X b)
+        {
+            Matrix4x4X ret = zero;
+            ret.m00 = (float)((double)a.m00 * (double)b.m00 + (double)a.m01 * (double)b.m10 + (double)a.m02 * (double)b.m20 + (double)a.m03 * (double)b.m30);
+            ret.m01 = (float)((double)a.m00 * (double)b.m01 + (double)a.m01 * (double)b.m11 + (double)a.m02 * (double)b.m21 + (double)a.m03 * (double)b.m31);
+            ret.m02 = (float)((double)a.m00 * (double)b.m02 + (double)a.m01 * (double)b.m12 + (double)a.m02 * (double)b.m22 + (double)a.m03 * (double)b.m32);
+            ret.m03 = (float)((double)a.m00 * (double)b.m03 + (double)a.m01 * (double)b.m13 + (double)a.m02 * (double)b.m23 + (double)a.m03 * (double)b.m33);
+            ret.m10 = (float)((double)a.m10 * (double)b.m00 + (double)a.m11 * (double)b.m10 + (double)a.m12 * (double)b.m20 + (double)a.m13 * (double)b.m30);
+            ret.m11 = (float)((double)a.m10 * (double)b.m01 + (double)a.m11 * (double)b.m11 + (double)a.m12 * (double)b.m21 + (double)a.m13 * (double)b.m31);
+            ret.m12 = (float)((double)a.m10 * (double)b.m02 + (double)a.m11 * (double)b.m12 + (double)a.m12 * (double)b.m22 + (double)a.m13 * (double)b.m32);
+            ret.m13 = (float)((double)a.m10 * (double)b.m03 + (double)a.m11 * (double)b.m13 + (double)a.m12 * (double)b.m23 + (double)a.m13 * (double)b.m33);
+            ret.m20 = (float)((double)a.m20 * (double)b.m00 + (double)a.m21 * (double)b.m10 + (double)a.m22 * (double)b.m20 + (double)a.m23 * (double)b.m30);
+            ret.m21 = (float)((double)a.m20 * (double)b.m01 + (double)a.m21 * (double)b.m11 + (double)a.m22 * (double)b.m21 + (double)a.m23 * (double)b.m31);
+            ret.m22 = (float)((double)a.m20 * (double)b.m02 + (double)a.m21 * (double)b.m12 + (double)a.m22 * (double)b.m22 + (double)a.m23 * (double)b.m32);
+            ret.m23 = (float)((double)a.m20 * (double)b.m03 + (double)a.m21 * (double)b.m13 + (double)a.m22 * (double)b.m23 + (double)a.m23 * (double)b.m33);
+            ret.m30 = (float)((double)a.m30 * (double)b.m00 + (double)a.m31 * (double)b.m10 + (double)a.m32 * (double)b.m20 + (double)a.m33 * (double)b.m30);
+            ret.m31 = (float)((double)a.m30 * (double)b.m01 + (double)a.m31 * (double)b.m11 + (double)a.m32 * (double)b.m21 + (double)a.m33 * (double)b.m31);
+            ret.m32 = (float)((double)a.m30 * (double)b.m02 + (double)a.m31 * (double)b.m12 + (double)a.m32 * (double)b.m22 + (double)a.m33 * (double)b.m32);
+            ret.m33 = (float)((double)a.m30 * (double)b.m03 + (double)a.m31 * (double)b.m13 + (double)a.m32 * (double)b.m23 + (double)a.m33 * (double)b.m33);
+            return ret;
+        }
+
+        public static Vector4 operator *(Matrix4x4X a, Vector4 v)
+        {
+            Vector4 ret;
+            ret.x = (float)((double)a.m00 * (double)v.x + (double)a.m01 * (double)v.y + (double)a.m02 * (double)v.z + (double)a.m03 * (double)v.w);
+            ret.y = (float)((double)a.m10 * (double)v.x + (double)a.m11 * (double)v.y + (double)a.m12 * (double)v.z + (double)a.m13 * (double)v.w);
+            ret.z = (float)((double)a.m20 * (double)v.x + (double)a.m21 * (double)v.y + (double)a.m22 * (double)v.z + (double)a.m23 * (double)v.w);
+            ret.w = (float)((double)a.m30 * (double)v.x + (double)a.m31 * (double)v.y + (double)a.m32 * (double)v.z + (double)a.m33 * (double)v.w);
+            return ret;
+        }
+
+        public static bool operator ==(Matrix4x4X a, Matrix4x4X b) => a.GetColumn(0) == b.GetColumn(0) && a.GetColumn(1) == b.GetColumn(1) && a.GetColumn(2) == b.GetColumn(2) && a.GetColumn(3) == b.GetColumn(3);
+
+        public static bool operator !=(Matrix4x4X a, Matrix4x4X b) => !(a == b);
+        #endregion
+
     }
 }
