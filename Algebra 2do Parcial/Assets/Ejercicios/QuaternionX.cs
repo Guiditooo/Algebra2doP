@@ -66,15 +66,16 @@ namespace Algebra
             }
         }
         public static QuaternionX identity { get; } = new QuaternionX(0, 0, 0, 1); //Devuelve la identidad del quaternion (0,0,0,1).
-        public static QuaternionX Euler(float x, float y, float z)
+        public static QuaternionX Euler(float x, float y, float z) //Devuelve un Quat con las coordenadas ya rotadas una cantidad de angulos X, Y y Z.
         {
-
+            
             float sin;
             float cos;
-            QuaternionX qX, qY, qZ, ret = identity;
+            QuaternionX qX, qY, qZ;
+            QuaternionX ret = identity;
 
-            sin = Mathf.Sin(Mathf.Deg2Rad * x * 0.5f);
-            cos = Mathf.Cos(Mathf.Deg2Rad * x * 0.5f);
+            sin = Mathf.Sin(Mathf.Deg2Rad * x * 0.5f); //Para la parte imaginaria, se usa el seno
+            cos = Mathf.Cos(Mathf.Deg2Rad * x * 0.5f); //Para la parte real, siempre voy a usar el coseno
             qX = new QuaternionX(sin, 0, 0, cos);
             
             sin = Mathf.Sin(Mathf.Deg2Rad * y * 0.5f);
@@ -85,30 +86,30 @@ namespace Algebra
             cos = Mathf.Cos(Mathf.Deg2Rad * z * 0.5f);
             qZ = new QuaternionX(0, 0, sin, cos);
 
-            ret = qY * qX * qZ;
+            ret = qY * qX * qZ; //Tengo entendido que esta es la forma en la que se debe trabajar.
 
             return ret;
         }
         public static QuaternionX Euler(Vector3 angle)
         {
             return Euler(angle.x, angle.y, angle.z);
-        }
+        }//Idem Euler
         public static QuaternionX EulerAngles(float x, float y, float z)
         {
             return Euler(x, y, z);
-        }
+        }//Idem Euler
         public static QuaternionX EulerAngles(Vector3 angle)
         {
             return Euler(angle.x, angle.y, angle.z);
-        }
+        }//Idem Euler
         public static QuaternionX Normalize(QuaternionX a)
         { 
-            float aux = Mathf.Sqrt(Mathf.Pow(a._x, 2) + Mathf.Pow(a._y, 2) + Mathf.Pow(a._z, 2) + Mathf.Pow(a._w, 2));
+            float aux = a.magnitude; //Módulo o magnitud
             return new QuaternionX(a._x / aux, a._y / aux, a._z / aux, a._w / aux);
-        }
-        public QuaternionX Normalize()
+        }//Divide todas las componentes por la magnitud (raiz de los cuadrados de las componentes)
+        public QuaternionX Normalize()// Devuelve el Quaternion con magnitud 1. Permite hacer cuentas más fácil.
         {
-            float aux = Mathf.Sqrt(Mathf.Pow(_x, 2) + Mathf.Pow(_y, 2) + Mathf.Pow(_z, 2) + Mathf.Pow(_w, 2));
+            float aux = magnitude; 
             return new QuaternionX(_x / aux, _y / aux,_z / aux, _w / aux);
         }
         public QuaternionX normalized {
@@ -116,24 +117,35 @@ namespace Algebra
             {
                 return Normalize(this);
             }
+        } //Usa la función de arriba
+        public float magnitude //Devuelve la magnitud del vector: raíz de la suma del cuadrado de cada componente.
+        {
+            get
+            {
+                return Mathf.Sqrt(Mathf.Pow(_x, 2) + Mathf.Pow(_y, 2) + Mathf.Pow(_z, 2) + Mathf.Pow(_w, 2));
+            }
         }
-        public static float Dot(QuaternionX a, QuaternionX b) //Término a término. Double son par hacerlo más exacto.
+        public static float Dot(QuaternionX a, QuaternionX b) //Término a término. Double son para hacerlo más exacto.
         {
             return (float)((double)a._x * (double)b._x + (double)a._y * (double)b._y + (double)a._z * (double)b._z + (double)a._w * (double)b._w);
         }
-        public static float Angle(QuaternionX a, QuaternionX b) //Investigar
+        public static float Angle(QuaternionX a, QuaternionX b) //Devuelve el ángulo entre un vector y otro.
         {
-            return (float)((double)Mathf.Acos(Mathf.Min(Mathf.Abs(Dot(a, b)), 1f)) * 2.0f * Mathf.Rad2Deg);
+            if(a.magnitude==0 || b.magnitude == 0)
+            {
+                return 0; //Esto es porque si alguna magnitud es 0, tecnicamente no hay vector.
+            }
+            return (float)((double)Mathf.Acos(Mathf.Abs(Dot(a, b)) * Mathf.Rad2Deg / (a.magnitude * b.magnitude) ) );//si adotb es 0, el angulo es 90 grados.
         }
         public static QuaternionX AngleAxis(float angle, Vector3 axis) //Genera una rotacion en dicho vector usa radianes
         {
             QuaternionX ret = identity; 
             axis.Normalize();
-            axis *= (float)System.Math.Sin((angle / 2) * Mathf.Deg2Rad);
+            axis *= (float)System.Math.Sin((angle / 2) * Mathf.Deg2Rad); //Parte imaginaria
             ret._x = axis.x;
             ret._y = axis.y;
             ret._z = axis.z;
-            ret._w = (float)System.Math.Cos((angle / 2) * Mathf.Deg2Rad);
+            ret._w = (float)System.Math.Cos((angle / 2) * Mathf.Deg2Rad); //Parte real
             return Normalize(ret);
         }
         public static QuaternionX AxisAngle(Vector3 axis, float angle) //Genera una rotacion en dicho vector usa grados
@@ -157,14 +169,14 @@ namespace Algebra
 
             float dot = Vector3.Dot(from, to);
 
-            if (dot > -1 + kEpsilon) // < - 0,99999
+            if (dot > -1 + kEpsilon) // mas grande -0,99999
             {
-                float s = Mathf.Sqrt((1 + dot) * 2);
-                float inverse = 1 / s;
-                Vector3 c = Vector3.Cross(from, to) * inverse;
+                float s = Mathf.Sqrt((1 + dot) * 2); //Creo que es el arco coseno
+                float inverse = 1 / s;               //Siguiendo el hilo de pensamiento, esto es el angulo
+                Vector3 c = Vector3.Cross(from, to) * inverse; 
                 ret = new QuaternionX(c.x, c.y, c.z, s * 0.5f);
             }
-            else if (dot > 1 - kEpsilon) // > 0,99999
+            else if (dot > 1 - kEpsilon) // si es mas grande que 0,999999
             {
                 ret = new QuaternionX(0, 0, 0, 1);
             }
@@ -178,21 +190,24 @@ namespace Algebra
                 ret = new QuaternionX(axis.x, axis.y, axis.z, 0);
             }
 
+            //Como obtengo un axis y un angulo, podria usar angleaxis para simplificar, pero asi tengo en cuenta los valores menores a -1 y mayores a 1
+
             return ret;
 
         }
-        public static QuaternionX Inverse(QuaternionX q) => -q;
-        public static QuaternionX Lerp(QuaternionX a, QuaternionX b, float time)
-        {
+        public static QuaternionX Inverse(QuaternionX q) => -q; //Invierte las partes imaginarias
+        public static QuaternionX Lerp(QuaternionX a, QuaternionX b, float time)//Interpola linealmente desde A a B.
+        {//Basicamente, time va a ir de 0 a 1. Siendo 0 la posición de A, y 1 la de B
             time = Mathf.Clamp(time, 0, 1);
             QuaternionX ret = LerpUnclamped(a, b, time);
             Normalize(ret);
             return ret;
         }
-        public static QuaternionX LerpUnclamped(QuaternionX a, QuaternionX b, float time)
-        {
+        public static QuaternionX LerpUnclamped(QuaternionX a, QuaternionX b, float time) //Va desde un punto que pasa por otro hasta el infinito, De manera lineal
+        {   //Basicamente, time va a ir de 0 a 1. Siendo 0 la posición de A, y 1 la de B. 
+            //En este caso, si time no está en el rango 0-1, va a pasarse, en la misma linea (formada por a y b).
             QuaternionX ret = identity;
-            if (Dot(a, b) < 0)
+            if (Dot(a, b) < 0) //Solamente para saber el sentido en el que debe lerpear
             {
                 ret._x = a._x + time * (-b._x - a._x);
                 ret._y = a._y + time * (-b._y - a._y);
@@ -209,17 +224,17 @@ namespace Algebra
             Normalize(ret);
             return ret;
         }
-        public static QuaternionX Slerp(QuaternionX a, QuaternionX b, float time)
+        public static QuaternionX Slerp(QuaternionX a, QuaternionX b, float time) //interpola esfericamente, desde A, a B. 
         {
             time = Mathf.Clamp(time, 0, 1);
             return SlerpUnclamped(a, b, time);
         }
-        public static QuaternionX SlerpUnclamped(QuaternionX a, QuaternionX b, float time)
-        {
+        public static QuaternionX SlerpUnclamped(QuaternionX a, QuaternionX b, float time)//Va desde un punto que pasa por otro hasta el infinito, de manera esferica
+        {//En este caso, si time no está en el rango 0-1, va a pasarse, en la misma linea (formada por a y b).
             QuaternionX ret = identity;
             float dot = Dot(a, b);
 
-            if (dot < 0)
+            if (dot < 0)//Verifica hacia donde tiene que ir
             {
                 dot = -dot;
                 b = -b;
@@ -227,7 +242,7 @@ namespace Algebra
             }
             float t1, t2;
             if (dot < 0.95)
-            {
+            {   
                 float angle = Mathf.Acos(dot);
                 float sinAgle = Mathf.Sin(angle);
                 float inverse = 1 / sinAgle;
@@ -241,15 +256,16 @@ namespace Algebra
             }
             return ret;
         }
-        public void Set(float new_x, float new_y, float new_z, float new_w)
+        public void Set(float new_x, float new_y, float new_z, float new_w) //Da nuevos valores a las componentes
         {
             _x = new_x;
             _y = new_y;
             _z = new_z;
             _w = new_w;
         }
-        public static QuaternionX LookRotation(Vector3 forward, Vector3 upwards)
-        {
+        public static QuaternionX LookRotation(Vector3 forward, Vector3 upwards) //Forward es el ejez
+        {   //Forma una rotación que parte desde la identidad, hasta forward, teniendo en cuenta, cuál es el vector que se utiliza como ortogonal a donde se está mirando.
+            //generalmente, el vector ortogonal que se usa, es el up (0,1,0);
 
             QuaternionX ret = identity;
             int[] _next = { 1, 2, 0 };
@@ -261,25 +277,27 @@ namespace Algebra
 
             forward.Normalize();
 
-            upwards = upwards != null ? upwards : Vector3.up;
-            Vector3 right = Vector3.Cross(upwards, forward);
+            upwards = upwards != null ? upwards : Vector3.up; //Esto es para asemejar al LookRotation(vector3)
+            Vector3 right = Vector3.Cross(upwards, forward); //Genera los vectores ortogonales a partir de los vectores ingresados. En este caso, es el eje X
             Vector3.Normalize(right);
-            upwards = Vector3.Cross(forward, right);
-            right = Vector3.Cross(upwards, forward);
+            upwards = Vector3.Cross(forward, right); //Este es el eje Y //Pero para esto, es necesrio normalizar Y
+            right = Vector3.Cross(upwards, forward); //Vuelvo a tomar el eje X, sin normalizar.
 
-            float t = right.x + upwards.y + forward.z;
+            float t = right.x + upwards.y + forward.z;  //Sumatoria de diagonales
             if (t > 0)
             {
                 float x, y, z, w;
 
-                t++;
+                t++; //suma +1
 
-                float s = 0.5f / Mathf.Sqrt(t);
-
+                float s = 0.5f / Mathf.Sqrt(t); // Inversa de raiz(diagonales + 1) * 2 Y esto me devuelve un ángulo
+                
+                //Supongamos que tengo una matriz de rotación formada por right, upwards y forwad. Similar a la del else.
                 w = s * t;
                 x = (upwards.z - forward.y) * s;
                 y = (forward.x - right.z) * s;
                 z = (right.y - upwards.x) * s;
+                //Extraigo el quaternion de esa matriz de rotación formada por right, upwards y forward.
                 ret = new QuaternionX(x, y, z, w);
             }
             else
@@ -292,25 +310,26 @@ namespace Algebra
                 };
                 float[] q = { 0, 0, 0 };
                 int i = 0;
-                if (upwards.y > right.x)
+                if (upwards.y > right.x) //Si.
                 {
                     i = 1;
                 }
-                if (forward.z > rot[i, i])
+                if (forward.z > rot[i, i]) //También.
                 {
                     i = 2;
                 }
-                int j = _next[i];
+                int j = _next[i]; //Esta hecho para no pasarse del indice, a la vez que haya un valor diferente para i, j y k.
                 int k = _next[j];
-                t = rot[i, i] - rot[j, j] - rot[k, k] + 1;
-                float s = 0.5f / Mathf.Sqrt(t);
+                t = rot[i, i] - rot[j, j] - rot[k, k] + 1; //suma +1 a la diagonal
+                float s = 0.5f / Mathf.Sqrt(t); // Inversa de raiz(diagonales + 1) * 2 Y esto me devuelve un ángulo
                 q[i] = s * t;
                 float w = (rot[k, j] - rot[j, k]) * s;
                 q[j] = (rot[j, i] + rot[i, j]) * s;
                 q[k] = (rot[k, i] + rot[i, k]) * s;
+                //Extraigo el quaternion de esa matriz de rotación formada por right, upwards y forward.
                 ret = new QuaternionX(q[0], q[1], q[2], w);
             }
-            Normalize(ret);
+            Normalize(ret); //Solamente busca una dirección así que es necesario normalizar el resultado.
             return ret;
         }
         public static QuaternionX LookRotation(Vector3 forward) => LookRotation(forward, Vector3.up);
@@ -331,7 +350,7 @@ namespace Algebra
                 return to;
             }
             float t = Mathf.Min(1f, angle / num); //Single es una estructura para mucha precision de datos 32 digitos.
-            return SlerpUnclamped(from, to, t);
+            return SlerpUnclamped(from, to, t); 
         }
         public void SetFromToRotation(Vector3 from, Vector3 to)
         {
@@ -339,15 +358,16 @@ namespace Algebra
         }
         public void ToAngleAxis(out float angle, out Vector3 axis)
         {
-            angle = 2 * Mathf.Acos(_w);
-            if (Mathf.Abs(angle - 0) < kEpsilon)
+            angle = 2 * Mathf.Acos(_w); //w se arma con el coseno del angulo, porl o que a la inversa, se consigue el angulo
+            if (Mathf.Abs(angle) < kEpsilon) //Si el angulo es muy chico
             {
-                angle *= Mathf.Deg2Rad;
+                angle *= Mathf.Deg2Rad; //pasa de grado a radian
                 axis = new Vector3(1, 0, 0);
             }
-            float div = 1 / Mathf.Sqrt(1 - Mathf.Sqrt(_w));
-            angle *= Mathf.Deg2Rad;
+            float div = 1 / Mathf.Sqrt(1 - Mathf.Sqrt(_w)); 
+            angle *= Mathf.Deg2Rad; //pasa de grado a radian
             axis = new Vector3(_x * div, _y * div, _z * div);
+            
         }
         string IFormattable.ToString(string format, IFormatProvider formatProvider)
         {
@@ -357,27 +377,27 @@ namespace Algebra
 
         #region Operators
 
-        public static QuaternionX operator +(QuaternionX v1, QuaternionX v2)//Value1, Value2
+        public static QuaternionX operator +(QuaternionX v1, QuaternionX v2)//suma componente a componente
         {
             return new QuaternionX(v1._x + v2._x, v1._y + v2._y, v1._z + v2._z, v1._w + v2._w);
         }
-        public static QuaternionX operator -(QuaternionX v1, QuaternionX v2)//Value1, Value2
+        public static QuaternionX operator -(QuaternionX v1, QuaternionX v2)//Resta componente a componente
         {
             return new QuaternionX(v1._x - v2._x, v1._y - v2._y, v1._z - v2._z, v1._w - v2._w);
         }
-        public static QuaternionX operator -(QuaternionX v1)//Value1
+        public static QuaternionX operator -(QuaternionX v1)//Quaternion dando vuelta los signos de sus componentes
         {
             return new QuaternionX(-v1._x, -v1._y, -v1._z, v1._w);
         }
-        public static QuaternionX operator *(QuaternionX v1, float v2)//Value1, Value2
+        public static QuaternionX operator *(QuaternionX v1, float v2)//Multiplicación componente a componente
         {
             return new QuaternionX(v1._x * v2, v1._y * v2, v1._z * v2, v1._w * v2);
         }
-        public static bool operator ==(QuaternionX v1, QuaternionX v2)//Value1, Value2
+        public static bool operator ==(QuaternionX v1, QuaternionX v2)//Cada componente igual a la del otro quaternion
         {
             return (v1._x == v2._x && v1._y == v2._y && v1._z == v2._z && v1._w == v2._w);
         }
-        public static bool operator !=(QuaternionX v1, QuaternionX v2)//Value1, Value2
+        public static bool operator !=(QuaternionX v1, QuaternionX v2)//Al menos una componente distinta respecto del otro quaternion
         {
             return (v1._x != v2._x || v1._y != v2._y || v1._z != v2._z || v1._w != v2._w);
         }
@@ -385,7 +405,7 @@ namespace Algebra
 
         public override bool Equals(object other) => other is QuaternionX other1 && Equals(other1);
 
-        public static QuaternionX operator *(QuaternionX a, QuaternionX b) //Quaternion - Quaternion
+        public static QuaternionX operator *(QuaternionX a, QuaternionX b) //Quaternion * Quaternion
         {
             return new QuaternionX( 
                 a._w * b._x + a._x * b._w + a._y * b._z - a._z * b._y,  // i
@@ -395,7 +415,7 @@ namespace Algebra
             );
         }
 
-        public static Vector3 operator *(QuaternionX rot, Vector3 point) // Quaternion - vector
+        public static Vector3 operator *(QuaternionX rot, Vector3 point) // Le aplica la rotación a un punto
         {
             float num1 = rot._x * 2f;
             float num2 = rot._y * 2f;

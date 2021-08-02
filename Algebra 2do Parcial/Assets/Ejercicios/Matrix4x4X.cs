@@ -8,6 +8,8 @@ namespace Algebra
 {
     public struct Matrix4x4X : IEquatable<Matrix4x4X>
     {
+        
+        #region Variables
         public float m00;
         public float m10;
         public float m20;
@@ -24,7 +26,31 @@ namespace Algebra
         public float m13;
         public float m23;
         public float m33;
+        #endregion
 
+        #region constructor
+        public Matrix4x4X(Vector4 col0, Vector4 col1, Vector4 col2, Vector4 col3)
+        {
+            m00 = col0.x;
+            m01 = col1.x;
+            m02 = col2.x;
+            m03 = col3.x;
+            m10 = col0.y;
+            m11 = col1.y;
+            m12 = col2.y;
+            m13 = col3.y;
+            m20 = col0.z;
+            m21 = col1.z;
+            m22 = col2.z;
+            m23 = col3.z;
+            m30 = col0.w;
+            m31 = col1.w;
+            m32 = col2.w;
+            m33 = col3.w;
+        }
+        #endregion
+
+        #region Methods
         public float this[int row, int col]
         {
             get
@@ -135,26 +161,7 @@ namespace Algebra
                 }
             }
         }
-        public Matrix4x4X(Vector4 col0, Vector4 col1, Vector4 col2, Vector4 col3)
-        {
-            m00 = col0.x;
-            m01 = col1.x;
-            m02 = col2.x;
-            m03 = col3.x;
-            m10 = col0.y;
-            m11 = col1.y;
-            m12 = col2.y;
-            m13 = col3.y;
-            m20 = col0.z;
-            m21 = col1.z;
-            m22 = col2.z;
-            m23 = col3.z;
-            m30 = col0.w;
-            m31 = col1.w;
-            m32 = col2.w;
-            m33 = col3.w;
-        }
-        public Vector3 lossyScale{
+        public Vector3 lossyScale{ //Devuelve la escala real del objeto. Esto es en caso de que se apliquen rotaciones y otros cálculos, donde se pierde la escala
             get
             {
                 return new Vector3(GetColumn(0).magnitude, GetColumn(1).magnitude, GetColumn(2).magnitude);
@@ -197,15 +204,16 @@ namespace Algebra
                 return m;
             }
         }
-        public static Matrix4x4X Inverse(Matrix4x4X m)
+        public static Matrix4x4X Inverse(Matrix4x4X m) //Devuelve la inversa de la matriz ingresada
         {
-            float detA = Determinant(m);
+            float detA = Determinant(m); //Debe tener determinante, de otra forma, no es inversible
             if (detA == 0)
                 return zero;
 
             Matrix4x4X aux = new Matrix4x4X()
             {
-                
+                //Lo que hace esto, se encarga de sacar el determinante de cada una de esas posiciones
+                //Hay foto del primer caso
                 //------0---------
                 m00 = m.m11 * m.m22 * m.m33 + m.m12 * m.m23 * m.m31 + m.m13 * m.m21 * m.m32 - m.m11 * m.m23 * m.m32 - m.m12 * m.m21 * m.m33 - m.m13 * m.m22 * m.m31,
                 m01 = m.m01 * m.m23 * m.m32 + m.m02 * m.m21 * m.m33 + m.m03 * m.m22 * m.m31 - m.m01 * m.m22 * m.m33 - m.m02 * m.m23 * m.m31 - m.m03 * m.m21 * m.m32,
@@ -250,9 +258,9 @@ namespace Algebra
             };
             return ret;
         }
-        public static Matrix4x4X Transpose(Matrix4x4X m)
+        public static Matrix4x4X Transpose(Matrix4x4X m)//Espeja respecto de la diagonal principal
         {
-            return new Matrix4x4X()
+            return new Matrix4x4X() 
             {
                 m01 = m.m10,
                 m02 = m.m20,
@@ -272,7 +280,7 @@ namespace Algebra
         {
             this = TRS(pos, q, s);
         }
-        public static Matrix4x4X Translate(Vector3 v)
+        public static Matrix4x4X Translate(Vector3 v) //Hay fotito
         {
             Matrix4x4X m;
             m.m00 = 1f;
@@ -293,7 +301,21 @@ namespace Algebra
             m.m33 = 1f;
             return m;
         }
-        public static Matrix4x4X Rotate(Quaternion q)
+        public Quaternion rotation { //Devuelve la matriz rotación de ese quaternion. Cómo? Mágicamente jaja - No, v
+            get { 
+                Matrix4x4X m = this;
+                Quaternion q = new Quaternion();
+                q.w = Mathf.Sqrt(Mathf.Max(0, 1 + m[0, 0] + m[1, 1] + m[2, 2])) / 2; //Devuelve la raiz de un número que debe ser al menos 0.
+                q.x = Mathf.Sqrt(Mathf.Max(0, 1 + m[0, 0] - m[1, 1] - m[2, 2])) / 2; //Por eso hace un min entre las posiciones de las diagonales.
+                q.y = Mathf.Sqrt(Mathf.Max(0, 1 - m[0, 0] + m[1, 1] - m[2, 2])) / 2; 
+                q.z = Mathf.Sqrt(Mathf.Max(0, 1 - m[0, 0] - m[1, 1] + m[2, 2])) / 2;
+                q.x *= Mathf.Sign(q.x * (m[2, 1] - m[1, 2])); 
+                q.y *= Mathf.Sign(q.y * (m[0, 2] - m[2, 0])); //Son los valores de la matriz que se van a modificar. (hay fotito)
+                q.z *= Mathf.Sign(q.z * (m[1, 0] - m[0, 1]));
+                return q;
+            } 
+        }
+        public static Matrix4x4X Rotate(Quaternion q) //Es así porque don opengl quiso que fuera así
         {
             double num1 = q.x * 2f;
             double num2 = q.y * 2f;
@@ -326,7 +348,7 @@ namespace Algebra
             m.m33 = 1f;
             return m;
         }
-        public static Matrix4x4X Scale(Vector3 v)
+        public static Matrix4x4X Scale(Vector3 v) //Hay fotito
         {
             Matrix4x4X m;
             m.m00 = v.x;
@@ -347,19 +369,20 @@ namespace Algebra
             m.m33 = 1f;
             return m;
         }
-        public static Matrix4x4X TRS(Vector3 pos, Quaternion q, Vector3 s)
+        public static Matrix4x4X TRS(Vector3 pos, Quaternion q, Vector3 s) //Devuelve la matriz TRS de los valores ingresados
         {
             return (Translate(pos) * Rotate(q) * Scale(s));
+            
         }
-        public Vector3 MultiplyVector(Vector3 v)
+        public Vector3 MultiplyVector(Vector3 v) //Multiplica las componentes del vector en la matriz (pero solo en X, Y y Z; ignorando W)
         {
-            Vector3 v3;
+            Vector3 v3; //No se tienen en cuenta ni la 4ta fila ni la 4ta columna
             v3.x = (float)((double)m00 * (double)v.x + (double)m01 * (double)v.y + (double)m02 * (double)v.z);
             v3.y = (float)((double)m10 * (double)v.x + (double)m11 * (double)v.y + (double)m12 * (double)v.z);
             v3.z = (float)((double)m20 * (double)v.x + (double)m21 * (double)v.y + (double)m22 * (double)v.z);
             return v3;
         }
-        public Vector3 MultiplyPoint3x4(Vector3 p)
+        public Vector3 MultiplyPoint3x4(Vector3 p) //Multiplica las componentes del vector en la matriz (X, Y y Z pero no ignoro W)
         {
             Vector3 v3;
             v3.x = (float)((double)m00 * (double)p.x + (double)m01 * (double)p.y + (double)m02 * (double)p.z) + m03;
@@ -367,7 +390,7 @@ namespace Algebra
             v3.z = (float)((double)m20 * (double)p.x + (double)m21 * (double)p.y + (double)m22 * (double)p.z) + m23;
             return v3;
         }
-        public Vector3 MultiplyPoint(Vector3 p)
+        public Vector3 MultiplyPoint(Vector3 p) //Es prácticamente lo mismo que usar MultiplyPoint3x4
         {
             Vector3 v3;
 
@@ -380,21 +403,21 @@ namespace Algebra
             v3.z *= num;
             return v3;
         }
-        public void SetRow(int index, Vector4 row)
+        public void SetRow(int index, Vector4 row) //Setea la fila
         {
             this[index, 0] = row.x;
             this[index, 1] = row.y;
             this[index, 2] = row.z;
             this[index, 3] = row.w;
         }
-        public void SetColumn(int index, Vector4 col)
+        public void SetColumn(int index, Vector4 col) //Setea la columna
         {
             this[0, index] = col.x;
             this[1, index] = col.y;
             this[2, index] = col.z;
             this[3, index] = col.w;
         }
-        public Vector4 GetRow(int index)
+        public Vector4 GetRow(int index) //Devuelve la fila
         {
             switch (index)
             {
@@ -410,8 +433,12 @@ namespace Algebra
                     throw new IndexOutOfRangeException("Index out of Range!");
             }
         }
-        public override bool Equals(object other) => other is Matrix4x4X other1 && this.Equals(other1);
-        public bool Equals(Matrix4x4X other)
+        public Vector4 GetColumn(int i) //Devuelve la columna
+        {
+            return new Vector4(this[0, i], this[1, i], this[2, i], this[3, i]);
+        }
+        public override bool Equals(object other) => other is Matrix4x4X other1 && this.Equals(other1); //Acá hay mágia implementada 
+        public bool Equals(Matrix4x4X other) //Si cada elemento es igual al otro
         {
             int num;
             if ( GetColumn(0).Equals(other.GetColumn(0)))
@@ -431,7 +458,7 @@ namespace Algebra
             num = 0;
             return num != 0;
         }
-        public override int GetHashCode()
+        public override int GetHashCode() //Más mágia por acá
         {
             Vector4 col = GetColumn(0);
             int hashCode = col.GetHashCode();
@@ -445,8 +472,8 @@ namespace Algebra
             int num5 = col.GetHashCode() >> 1;
             return num4 ^ num5;
         }
-        public float determinant => Determinant(this);
-        public static float Determinant(Matrix4x4X m)
+        public float determinant => Determinant(this); //Devuelve la determinante de esa matriz
+        public static float Determinant(Matrix4x4X m) //No es mágia pero podemos decir que lo es..
         {
             return
                 m[0, 3] * m[1, 2] * m[2, 1] * m[3, 0] - m[0, 2] * m[1, 3] * m[2, 1] * m[3, 0] -
@@ -462,34 +489,36 @@ namespace Algebra
                 m[0, 2] * m[1, 0] * m[2, 1] * m[3, 3] - m[0, 0] * m[1, 2] * m[2, 1] * m[3, 3] -
                 m[0, 1] * m[1, 0] * m[2, 2] * m[3, 3] + m[0, 0] * m[1, 1] * m[2, 2] * m[3, 3];
         }
-        public Vector4 GetColumn(int i)
-        {
-            return new Vector4(this[0, i], this[1, i], this[2, i], this[3, i]);
-        }
-        #region Operator
-        public static Matrix4x4X operator *(Matrix4x4X a, Matrix4x4X b)
+        #endregion
+
+        #region Operators
+        public static Matrix4x4X operator *(Matrix4x4X a, Matrix4x4X b)//Fila por columna//Componente a componente
         {
             Matrix4x4X ret = zero;
-            ret.m00 = (float)((double)a.m00 * (double)b.m00 + (double)a.m01 * (double)b.m10 + (double)a.m02 * (double)b.m20 + (double)a.m03 * (double)b.m30);
-            ret.m01 = (float)((double)a.m00 * (double)b.m01 + (double)a.m01 * (double)b.m11 + (double)a.m02 * (double)b.m21 + (double)a.m03 * (double)b.m31);
-            ret.m02 = (float)((double)a.m00 * (double)b.m02 + (double)a.m01 * (double)b.m12 + (double)a.m02 * (double)b.m22 + (double)a.m03 * (double)b.m32);
-            ret.m03 = (float)((double)a.m00 * (double)b.m03 + (double)a.m01 * (double)b.m13 + (double)a.m02 * (double)b.m23 + (double)a.m03 * (double)b.m33);
-            ret.m10 = (float)((double)a.m10 * (double)b.m00 + (double)a.m11 * (double)b.m10 + (double)a.m12 * (double)b.m20 + (double)a.m13 * (double)b.m30);
-            ret.m11 = (float)((double)a.m10 * (double)b.m01 + (double)a.m11 * (double)b.m11 + (double)a.m12 * (double)b.m21 + (double)a.m13 * (double)b.m31);
-            ret.m12 = (float)((double)a.m10 * (double)b.m02 + (double)a.m11 * (double)b.m12 + (double)a.m12 * (double)b.m22 + (double)a.m13 * (double)b.m32);
-            ret.m13 = (float)((double)a.m10 * (double)b.m03 + (double)a.m11 * (double)b.m13 + (double)a.m12 * (double)b.m23 + (double)a.m13 * (double)b.m33);
-            ret.m20 = (float)((double)a.m20 * (double)b.m00 + (double)a.m21 * (double)b.m10 + (double)a.m22 * (double)b.m20 + (double)a.m23 * (double)b.m30);
-            ret.m21 = (float)((double)a.m20 * (double)b.m01 + (double)a.m21 * (double)b.m11 + (double)a.m22 * (double)b.m21 + (double)a.m23 * (double)b.m31);
-            ret.m22 = (float)((double)a.m20 * (double)b.m02 + (double)a.m21 * (double)b.m12 + (double)a.m22 * (double)b.m22 + (double)a.m23 * (double)b.m32);
-            ret.m23 = (float)((double)a.m20 * (double)b.m03 + (double)a.m21 * (double)b.m13 + (double)a.m22 * (double)b.m23 + (double)a.m23 * (double)b.m33);
-            ret.m30 = (float)((double)a.m30 * (double)b.m00 + (double)a.m31 * (double)b.m10 + (double)a.m32 * (double)b.m20 + (double)a.m33 * (double)b.m30);
-            ret.m31 = (float)((double)a.m30 * (double)b.m01 + (double)a.m31 * (double)b.m11 + (double)a.m32 * (double)b.m21 + (double)a.m33 * (double)b.m31);
-            ret.m32 = (float)((double)a.m30 * (double)b.m02 + (double)a.m31 * (double)b.m12 + (double)a.m32 * (double)b.m22 + (double)a.m33 * (double)b.m32);
-            ret.m33 = (float)((double)a.m30 * (double)b.m03 + (double)a.m31 * (double)b.m13 + (double)a.m32 * (double)b.m23 + (double)a.m33 * (double)b.m33);
+            for (int i = 0; i<4;i++)
+            {
+                ret.SetColumn(i,  a * b.GetColumn(i));
+            }
+            //ret.m00 = (float)((double)a.m00 * (double)b.m00 + (double)a.m01 * (double)b.m10 + (double)a.m02 * (double)b.m20 + (double)a.m03 * (double)b.m30);
+            //ret.m01 = (float)((double)a.m00 * (double)b.m01 + (double)a.m01 * (double)b.m11 + (double)a.m02 * (double)b.m21 + (double)a.m03 * (double)b.m31);
+            //ret.m02 = (float)((double)a.m00 * (double)b.m02 + (double)a.m01 * (double)b.m12 + (double)a.m02 * (double)b.m22 + (double)a.m03 * (double)b.m32);
+            //ret.m03 = (float)((double)a.m00 * (double)b.m03 + (double)a.m01 * (double)b.m13 + (double)a.m02 * (double)b.m23 + (double)a.m03 * (double)b.m33);
+            //ret.m10 = (float)((double)a.m10 * (double)b.m00 + (double)a.m11 * (double)b.m10 + (double)a.m12 * (double)b.m20 + (double)a.m13 * (double)b.m30);
+            //ret.m11 = (float)((double)a.m10 * (double)b.m01 + (double)a.m11 * (double)b.m11 + (double)a.m12 * (double)b.m21 + (double)a.m13 * (double)b.m31);
+            //ret.m12 = (float)((double)a.m10 * (double)b.m02 + (double)a.m11 * (double)b.m12 + (double)a.m12 * (double)b.m22 + (double)a.m13 * (double)b.m32);
+            //ret.m13 = (float)((double)a.m10 * (double)b.m03 + (double)a.m11 * (double)b.m13 + (double)a.m12 * (double)b.m23 + (double)a.m13 * (double)b.m33);
+            //ret.m20 = (float)((double)a.m20 * (double)b.m00 + (double)a.m21 * (double)b.m10 + (double)a.m22 * (double)b.m20 + (double)a.m23 * (double)b.m30);
+            //ret.m21 = (float)((double)a.m20 * (double)b.m01 + (double)a.m21 * (double)b.m11 + (double)a.m22 * (double)b.m21 + (double)a.m23 * (double)b.m31);
+            //ret.m22 = (float)((double)a.m20 * (double)b.m02 + (double)a.m21 * (double)b.m12 + (double)a.m22 * (double)b.m22 + (double)a.m23 * (double)b.m32);
+            //ret.m23 = (float)((double)a.m20 * (double)b.m03 + (double)a.m21 * (double)b.m13 + (double)a.m22 * (double)b.m23 + (double)a.m23 * (double)b.m33);
+            //ret.m30 = (float)((double)a.m30 * (double)b.m00 + (double)a.m31 * (double)b.m10 + (double)a.m32 * (double)b.m20 + (double)a.m33 * (double)b.m30);
+            //ret.m31 = (float)((double)a.m30 * (double)b.m01 + (double)a.m31 * (double)b.m11 + (double)a.m32 * (double)b.m21 + (double)a.m33 * (double)b.m31);
+            //ret.m32 = (float)((double)a.m30 * (double)b.m02 + (double)a.m31 * (double)b.m12 + (double)a.m32 * (double)b.m22 + (double)a.m33 * (double)b.m32);
+            //ret.m33 = (float)((double)a.m30 * (double)b.m03 + (double)a.m31 * (double)b.m13 + (double)a.m32 * (double)b.m23 + (double)a.m33 * (double)b.m33);
             return ret;
         }
 
-        public static Vector4 operator *(Matrix4x4X a, Vector4 v)
+        public static Vector4 operator *(Matrix4x4X a, Vector4 v) // m4x4 * m1x4
         {
             Vector4 ret;
             ret.x = (float)((double)a.m00 * (double)v.x + (double)a.m01 * (double)v.y + (double)a.m02 * (double)v.z + (double)a.m03 * (double)v.w);
